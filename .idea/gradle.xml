@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/1_init_project" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/1_init_project" />
+            <option value="$PROJECT_DIR$/1_init_project/product-composite-service" />
+            <option value="$PROJECT_DIR$/1_init_project/product-service" />
+            <option value="$PROJECT_DIR$/1_init_project/recommendation-service" />
+            <option value="$PROJECT_DIR$/1_init_project/review-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/2_basic_rest_services" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/2_basic_rest_services" />
+            <option value="$PROJECT_DIR$/2_basic_rest_services/product-composite-service" />
+            <option value="$PROJECT_DIR$/2_basic_rest_services/product-service" />
+            <option value="$PROJECT_DIR$/2_basic_rest_services/recommendation-service" />
+            <option value="$PROJECT_DIR$/2_basic_rest_services/review-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/2_basic_rest_services/api" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/2_basic_rest_services/api" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
