@@ -4,6 +4,7 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <option name="distributionType" value="WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/1_init_project" />
         <option name="gradleJvm" value="#JAVA_HOME" />
         <option name="modules">
@@ -35,6 +36,15 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/2_basic_rest_services/api" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/2_basic_rest_services/util" />
+        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/2_basic_rest_services/util" />
           </set>
         </option>
       </GradleProjectSettings>
