@@ -15,7 +15,12 @@ repositories {
 	mavenCentral()
 }
 
+jar {
+	enabled = false
+}
+
 dependencies {
+	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.0.2'
 	implementation project(':api')
 	implementation project(':util')
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'

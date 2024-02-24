@@ -8,8 +8,8 @@ import java.util.List;
 public interface ReviewService {
 
 	@GetMapping(
-			value = "/review",
+			value = "/reviews",
 			produces = "application/json")
-	List<Review> getReviews(@RequestParam(value = "productId", required = true) int productId);
+	List<Review> getReviews(@RequestParam(value = "productId", required = true) Long productId);
 
 }
