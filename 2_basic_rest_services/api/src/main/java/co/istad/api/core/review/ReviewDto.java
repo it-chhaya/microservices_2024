@@ -1,6 +1,6 @@
 package co.istad.api.core.review;
 
-public class Review {
+public class ReviewDto {
 	private final Long productId;
 	private final Long reviewId;
 	private final String author;
@@ -8,7 +8,7 @@ public class Review {
 	private final String content;
 	private final String serviceAddress;
 
-	public Review() {
+	public ReviewDto() {
 		productId = 0L;
 		reviewId = 0L;
 		author = null;
@@ -17,7 +17,7 @@ public class Review {
 		serviceAddress = null;
 	}
 
-	public Review(Long productId, Long reviewId, String author, String subject, String content, String serviceAddress) {
+	public ReviewDto(Long productId, Long reviewId, String author, String subject, String content, String serviceAddress) {
 		this.productId = productId;
 		this.reviewId = reviewId;
 		this.author = author;

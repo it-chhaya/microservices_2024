@@ -1,10 +1,10 @@
-package co.istad.core.review;
+package co.istad.core.recommendation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ReviewServiceApplicationTests {
+class RecommendationDtoServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -4,3 +4,7 @@ logging:
   level:
     root: INFO
     se.magnus.microservices: DEBUG
+spring.data.mongodb:
+  host: localhost
+  port: 27017
+  database: product-db

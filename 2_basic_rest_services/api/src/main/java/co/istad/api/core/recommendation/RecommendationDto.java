@@ -1,6 +1,6 @@
 package co.istad.api.core.recommendation;
 
-public class Recommendation {
+public class RecommendationDto {
 
 	private final Long productId;
 	private final Long recommendationId;
@@ -9,7 +9,7 @@ public class Recommendation {
 	private final String content;
 	private final String serviceAddress;
 
-	public Recommendation() {
+	public RecommendationDto() {
 		productId = 0L;
 		recommendationId = 0L;
 		author = null;
@@ -18,7 +18,7 @@ public class Recommendation {
 		serviceAddress = null;
 	}
 
-	public Recommendation(Long productId, Long recommendationId, String author, Integer rate, String content, String serviceAddress) {
+	public RecommendationDto(Long productId, Long recommendationId, String author, Integer rate, String content, String serviceAddress) {
 		this.productId = productId;
 		this.recommendationId = recommendationId;
 		this.author = author;

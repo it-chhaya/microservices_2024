@@ -1,20 +1,20 @@
 package co.istad.api.core.product;
 
-public class Product {
+public class ProductDto {
 
 	private Long productId;
 	private String name;
 	private Integer weight;
 	private String serviceAddress;
 
-	public Product() {
+	public ProductDto() {
 		productId = 0L;
 		name = null;
 		weight = 0;
 		serviceAddress = null;
 	}
 
-	public Product(Long productId, String name, Integer weight, String serviceAddress) {
+	public ProductDto(Long productId, String name, Integer weight, String serviceAddress) {
 		this.productId = productId;
 		this.name = name;
 		this.weight = weight;

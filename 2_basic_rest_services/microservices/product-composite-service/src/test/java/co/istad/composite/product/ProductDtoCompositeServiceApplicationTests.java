@@ -1,8 +1,8 @@
 package co.istad.composite.product;
 
-import co.istad.api.core.product.Product;
-import co.istad.api.core.recommendation.Recommendation;
-import co.istad.api.core.review.Review;
+import co.istad.api.core.product.ProductDto;
+import co.istad.api.core.recommendation.RecommendationDto;
+import co.istad.api.core.review.ReviewDto;
 import co.istad.api.exception.InvalidInputException;
 import co.istad.api.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 import static java.util.Collections.singletonList;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ProductCompositeServiceApplicationTests {
+class ProductDtoCompositeServiceApplicationTests {
 
 	private static final Long PRODUCT_ID_OK = 1L;
 	private static final Long PRODUCT_ID_NOT_FOUND = 2L;
@@ -34,11 +34,11 @@ class ProductCompositeServiceApplicationTests {
 	void setUp() {
 
 		when(compositeIntegration.findProductById(PRODUCT_ID_OK))
-				.thenReturn(new Product(PRODUCT_ID_OK, "name", 1, "mock-address"));
+				.thenReturn(new ProductDto(PRODUCT_ID_OK, "name", 1, "mock-address"));
 		when(compositeIntegration.getRecommendations(PRODUCT_ID_OK))
-				.thenReturn(singletonList(new Recommendation(PRODUCT_ID_OK, 1L, "author", 1, "content", "mock address")));
+				.thenReturn(singletonList(new RecommendationDto(PRODUCT_ID_OK, 1L, "author", 1, "content", "mock address")));
 		when(compositeIntegration.getReviews(PRODUCT_ID_OK))
-				.thenReturn(singletonList(new Review(PRODUCT_ID_OK, 1L, "author", "subject", "content", "mock address")));
+				.thenReturn(singletonList(new ReviewDto(PRODUCT_ID_OK, 1L, "author", "subject", "content", "mock address")));
 
 		when(compositeIntegration.findProductById(PRODUCT_ID_NOT_FOUND))
 				.thenThrow(new NotFoundException("NOT FOUND: " + PRODUCT_ID_NOT_FOUND));

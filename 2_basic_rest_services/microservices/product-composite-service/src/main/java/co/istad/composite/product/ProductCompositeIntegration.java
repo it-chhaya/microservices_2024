@@ -1,10 +1,10 @@
 package co.istad.composite.product;
 
-import co.istad.api.core.product.Product;
+import co.istad.api.core.product.ProductDto;
 import co.istad.api.core.product.ProductService;
-import co.istad.api.core.recommendation.Recommendation;
+import co.istad.api.core.recommendation.RecommendationDto;
 import co.istad.api.core.recommendation.RecommendationService;
-import co.istad.api.core.review.Review;
+import co.istad.api.core.review.ReviewDto;
 import co.istad.api.core.review.ReviewService;
 import co.istad.api.exception.InvalidInputException;
 import co.istad.api.exception.NotFoundException;
@@ -56,16 +56,16 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	}
 
 	@Override
-	public Product findProductById(Long productId) {
+	public ProductDto findProductById(Long productId) {
 
 		try {
 			String url = productServiceUrl + productId;
 			LOG.debug("Will call getProduct API on URL: {}", url);
 
-			Product product = restTemplate.getForObject(url, Product.class);
-			LOG.debug("Found a product with id: {}", product.getProductId());
+			ProductDto productDto = restTemplate.getForObject(url, ProductDto.class);
+			LOG.debug("Found a product with id: {}", productDto.getProductId());
 
-			return product;
+			return productDto;
 		} catch (HttpClientErrorException ex) {
 			switch (HttpStatus.resolve(ex.getStatusCode().value())) {
 				case NOT_FOUND -> throw new NotFoundException(getErrorMessage(ex));
@@ -81,19 +81,19 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	}
 
 	@Override
-	public List<Review> getReviews(Long productId) {
+	public List<ReviewDto> getReviews(Long productId) {
 
 		try {
 			String url = reviewServiceUrl + productId;
 
 			LOG.debug("Will call getReviews API on URL: {}", url);
-			List<Review> reviews = restTemplate
-					.exchange(url, GET, null, new ParameterizedTypeReference<List<Review>>() {
+			List<ReviewDto> reviewDtos = restTemplate
+					.exchange(url, GET, null, new ParameterizedTypeReference<List<ReviewDto>>() {
 					})
 					.getBody();
 
-			LOG.debug("Found {} reviews for a product with id: {}", reviews.size(), productId);
-			return reviews;
+			LOG.debug("Found {} reviews for a product with id: {}", reviewDtos.size(), productId);
+			return reviewDtos;
 
 		} catch (Exception ex) {
 			LOG.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
@@ -102,19 +102,19 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	}
 
 	@Override
-	public List<Recommendation> getRecommendations(Long productId) {
+	public List<RecommendationDto> getRecommendations(Long productId) {
 
 		try {
 			String url = recommendationServiceUrl + productId;
 
 			LOG.debug("Will call getRecommendations API on URL: {}", url);
-			List<Recommendation> recommendations = restTemplate
-					.exchange(url, GET, null, new ParameterizedTypeReference<List<Recommendation>>() {
+			List<RecommendationDto> recommendationDtos = restTemplate
+					.exchange(url, GET, null, new ParameterizedTypeReference<List<RecommendationDto>>() {
 					})
 					.getBody();
 
-			LOG.debug("Found {} recommendations for a product with id: {}", recommendations.size(), productId);
-			return recommendations;
+			LOG.debug("Found {} recommendations for a product with id: {}", recommendationDtos.size(), productId);
+			return recommendationDtos;
 
 		} catch (Exception ex) {
 			LOG.warn("Got an exception while requesting recommendations, return zero recommendations: {}", ex.getMessage());
