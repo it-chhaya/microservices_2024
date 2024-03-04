@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.springframework.http.HttpMethod.GET;
 
@@ -56,6 +57,22 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	}
 
 	@Override
+	public ProductDto createProduct(ProductDto body) {
+		try {
+			String url = productServiceUrl;
+			LOG.debug("Will post a new product to URL: {}", url);
+
+			ProductDto product = restTemplate.postForObject(url, body, ProductDto.class);
+			LOG.debug("Created a product with id: {}", product.getProductId());
+
+			return product;
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
+		}
+	}
+
+	@Override
 	public ProductDto findProductById(Long productId) {
 
 		try {
@@ -81,6 +98,35 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	}
 
 	@Override
+	public void deleteProduct(Long productId) {
+		try {
+			String url = productServiceUrl + "/" + productId;
+			LOG.debug("Will call the deleteProduct API on URL: {}", url);
+
+			restTemplate.delete(url);
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
+		}
+	}
+
+	@Override
+	public ReviewDto createReview(ReviewDto body) {
+		try {
+			String url = reviewServiceUrl;
+			LOG.debug("Will post a new review to URL: {}", url);
+
+			ReviewDto review = restTemplate.postForObject(url, body, ReviewDto.class);
+			LOG.debug("Created a review with id: {}", review.getProductId());
+
+			return review;
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
+		}
+	}
+
+	@Override
 	public List<ReviewDto> getReviews(Long productId) {
 
 		try {
@@ -98,6 +144,35 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 		} catch (Exception ex) {
 			LOG.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
 			return new ArrayList<>();
+		}
+	}
+
+	@Override
+	public void deleteReviews(Long productId) {
+		try {
+			String url = reviewServiceUrl + "?productId=" + productId;
+			LOG.debug("Will call the deleteReviews API on URL: {}", url);
+
+			restTemplate.delete(url);
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
+		}
+	}
+
+	@Override
+	public RecommendationDto createRecommendation(RecommendationDto body) {
+		try {
+			String url = recommendationServiceUrl;
+			LOG.debug("Will post a new recommendation to URL: {}", url);
+
+			RecommendationDto recommendation = restTemplate.postForObject(url, body, RecommendationDto.class);
+			LOG.debug("Created a recommendation with id: {}", recommendation.getProductId());
+
+			return recommendation;
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
 		}
 	}
 
@@ -122,11 +197,40 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 		}
 	}
 
+	@Override
+	public void deleteRecommendations(Long productId) {
+		try {
+			String url = recommendationServiceUrl + "?productId=" + productId;
+			LOG.debug("Will call the deleteRecommendations API on URL: {}", url);
+
+			restTemplate.delete(url);
+
+		} catch (HttpClientErrorException ex) {
+			throw handleHttpClientException(ex);
+		}
+	}
+
 	private String getErrorMessage(HttpClientErrorException ex) {
 		try {
 			return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
 		} catch (IOException ioex) {
 			return ex.getMessage();
+		}
+	}
+
+	private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
+		switch (Objects.requireNonNull(HttpStatus.resolve(ex.getStatusCode().value()))) {
+			case NOT_FOUND -> {
+				return new NotFoundException(getErrorMessage(ex));
+			}
+			case UNPROCESSABLE_ENTITY -> {
+				return new InvalidInputException(getErrorMessage(ex));
+			}
+			default -> {
+				LOG.warn("Got an unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
+				LOG.warn("Error body: {}", ex.getResponseBodyAsString());
+				return ex;
+			}
 		}
 	}
 

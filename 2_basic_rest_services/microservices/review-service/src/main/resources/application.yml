@@ -1,2 +1,18 @@
 server:
   port: 7003
+  error:
+    include-message: always
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost/review-db
+    username: devkh
+    password: devkh@10
+    hikari:
+      initialization-fail-timeout: 60000
+
+logging:
+  level:
+    root: INFO
+    co.istad: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

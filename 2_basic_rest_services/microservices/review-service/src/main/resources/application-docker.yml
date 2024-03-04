@@ -2,5 +2,7 @@ spring:
   config:
     activate:
       on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgresql/review-db
 server:
   port: 8080
