@@ -8,8 +8,6 @@ import co.istad.core.recommendation.persistence.RecommendationRepository;
 import co.istad.util.http.ServiceUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,10 +29,10 @@ public class RecommendationServiceImpl implements RecommendationService {
 			Recommendation recommendation = recommendationMapper.fromRecommendationDto(body);
 			Recommendation newRecommendation = recommendationRepository.save(recommendation);
 
-			log.debug("createRecommendation: created a recommendation entity: {}/{}", body.getProductId(), body.getRecommendationId());
+			log.debug("createRecommendation: created a recommendation entity: {}/{}", body.productId(), body.recommendationId());
 			return recommendationMapper.toRecommendationDto(newRecommendation);
 		} catch (DuplicateKeyException e) {
-			throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Recommendation Id:" + body.getRecommendationId());
+			throw new InvalidInputException("Duplicate key, Product Id: " + body.productId() + ", Recommendation Id:" + body.recommendationId());
 		}
 	}
 

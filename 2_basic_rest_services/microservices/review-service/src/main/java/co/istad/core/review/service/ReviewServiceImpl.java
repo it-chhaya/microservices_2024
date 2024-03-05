@@ -8,8 +8,6 @@ import co.istad.core.review.persistence.ReviewRepository;
 import co.istad.util.http.ServiceUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,11 +29,11 @@ public class ReviewServiceImpl implements ReviewService {
 			Review entity = reviewMapper.apiToEntity(body);
 			Review newEntity = reviewRepository.save(entity);
 
-			log.debug("createReview: created a review entity: {}/{}", body.getProductId(), body.getReviewId());
+			log.debug("createReview: created a review entity: {}/{}", body.productId(), body.reviewId());
 			return reviewMapper.entityToApi(newEntity);
 
 		} catch (DataIntegrityViolationException dive) {
-			throw new InvalidInputException("Duplicate key, Product Id: " + body.getProductId() + ", Review Id:" + body.getReviewId());
+			throw new InvalidInputException("Duplicate key, Product Id: " + body.productId() + ", Review Id:" + body.reviewId());
 		}
 	}
 

@@ -36,7 +36,7 @@ dependencies {
 	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 	testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
-	implementation "org.postgresql:postgresql:${postgresqlVersion}"
+	runtimeOnly "org.postgresql:postgresql:${postgresqlVersion}"
 
 	implementation platform('org.testcontainers:testcontainers-bom:1.15.2')
 	testImplementation 'org.testcontainers:testcontainers'

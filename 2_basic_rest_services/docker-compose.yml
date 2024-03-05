@@ -31,6 +31,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+
   mongodb:
     image: mongo:7.0.6
     ports:
@@ -47,11 +48,11 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DATABASE=review-db
+      - POSTGRES_DB=review-db
       - POSTGRES_USER=devkh
       - POSTGRES_PASSWORD=devKH@10
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "devkh", "-P", "$POSTGRES_PASSWORD"]
+      test: [ "CMD", "pg_isready", "-U", "devkh", "-d", "review-db"]
       interval: 20s  # Check every 20 seconds
       timeout: 3s     # Wait up to 3 seconds for successful check
       retries: 5     # Retry up to 5 times before marking unhealthy

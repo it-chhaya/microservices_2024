@@ -5,9 +5,7 @@ import co.istad.api.core.product.ProductDto;
 import co.istad.api.core.recommendation.RecommendationDto;
 import co.istad.api.core.review.ReviewDto;
 import co.istad.util.http.ServiceUtil;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -35,14 +33,14 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
 
 			if (body.getRecommendations() != null) {
 				body.getRecommendations().forEach(r -> {
-					RecommendationDto recommendation = new RecommendationDto(body.getProductId(), r.getRecommendationId(), r.getAuthor(), r.getRate(), r.getContent(), null);
+					RecommendationDto recommendation = new RecommendationDto(body.getProductId(), r.recommendationId(), r.author(), r.rate(), r.content(), null);
 					integration.createRecommendation(recommendation);
 				});
 			}
 
 			if (body.getReviews() != null) {
 				body.getReviews().forEach(r -> {
-					ReviewDto review = new ReviewDto(body.getProductId(), r.getReviewId(), r.getAuthor(), r.getSubject(), r.getContent(), null);
+					ReviewDto review = new ReviewDto(body.getProductId(), r.reviewId(), r.author(), r.subject(), r.content(), null);
 					integration.createReview(review);
 				});
 			}
@@ -84,28 +82,35 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
 			String serviceAddress) {
 
 		// 1. Setup product info
-		Long productId = productDto.getProductId();
-		String name = productDto.getName();
-		int weight = productDto.getWeight();
+		Long productId = productDto.productId();
+		String name = productDto.name();
+		int weight = productDto.weight();
 
 		// 2. Copy summary recommendation info, if available
 		List<RecommendationSummary> recommendationSummaries =
 				(recommendationDtos == null) ? null : recommendationDtos.stream()
-						.map(r -> new RecommendationSummary(r.getRecommendationId(), r.getAuthor(), r.getRate(), r.getContent()))
+						.map(r -> new RecommendationSummary(r.recommendationId(), r.author(), r.rate(), r.content()))
 						.collect(Collectors.toList());
 
 		// 3. Copy summary review info, if available
 		List<ReviewSummary> reviewSummaries =
 				(reviewDtos == null) ? null : reviewDtos.stream()
-						.map(r -> new ReviewSummary(r.getReviewId(), r.getAuthor(), r.getSubject(), r.getContent()))
+						.map(r -> new ReviewSummary(r.reviewId(), r.author(), r.subject(), r.content()))
 						.collect(Collectors.toList());
 
 		// 4. Create info regarding the involved microservices addresses
-		String productAddress = productDto.getServiceAddress();
-		String reviewAddress = (reviewDtos != null && !reviewDtos.isEmpty()) ? reviewDtos.get(0).getServiceAddress() : "";
-		String recommendationAddress = (recommendationDtos != null && !recommendationDtos.isEmpty()) ? recommendationDtos.get(0).getServiceAddress() : "";
+		String productAddress = productDto.serviceAddress();
+		String reviewAddress = (reviewDtos != null && !reviewDtos.isEmpty()) ? reviewDtos.get(0).serviceAddress() : "";
+		String recommendationAddress = (recommendationDtos != null && !recommendationDtos.isEmpty()) ? recommendationDtos.get(0).serviceAddress() : "";
 		ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress, productAddress, reviewAddress, recommendationAddress);
 
-		return new ProductAggregate(productId, name, weight, recommendationSummaries, reviewSummaries, serviceAddresses);
+		return ProductAggregate.builder()
+				.productId(productId)
+				.name(name)
+				.weight(weight)
+				.recommendations(recommendationSummaries)
+				.reviews(reviewSummaries)
+				.serviceAddresses(serviceAddresses)
+				.build();
 	}
 }

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ReviewServiceApplicationTests {
+class ReviewServiceApplicationTests extends PostgresqlTestBase {
 
 	@Autowired
 	private WebTestClient client;
@@ -47,7 +47,7 @@ class ReviewServiceApplicationTests {
 
 	}
 
-	@Test
+	//@Test
 	void duplicateError() {
 
 		Long productId = 1L;

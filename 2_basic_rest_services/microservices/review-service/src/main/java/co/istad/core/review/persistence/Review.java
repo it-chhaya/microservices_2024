@@ -16,9 +16,8 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Version
-    private Integer version;
+    private int version;
     private Long productId;
     private Long reviewId;
     private String author;

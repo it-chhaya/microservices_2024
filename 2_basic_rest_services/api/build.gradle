@@ -13,9 +13,14 @@ repositories {
 
 ext {
     springBootVersion = '3.2.2'
+
 }
 
 dependencies {
+
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
 	implementation 'org.springdoc:springdoc-openapi-starter-common:2.0.2'
 	implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'

@@ -65,7 +65,7 @@ public class PersistenceTests extends MongoDbTestBase {
 		repository.save(savedEntity);
 
 		Product foundEntity = repository.findById(savedEntity.getId()).get();
-		assertEquals(1, (long)foundEntity.getVersion());
+		assertEquals(1, foundEntity.getVersion());
 		assertEquals("n2", foundEntity.getName());
 	}
 
@@ -114,7 +114,7 @@ public class PersistenceTests extends MongoDbTestBase {
 
 		// Get the updated entity from the database and verify its new state
 		Product updatedEntity = repository.findById(savedEntity.getId()).get();
-		assertEquals(1, (int)updatedEntity.getVersion());
+		assertEquals(1, updatedEntity.getVersion());
 		assertEquals("n1", updatedEntity.getName());
 	}
 

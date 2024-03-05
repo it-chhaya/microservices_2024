@@ -3,10 +3,13 @@ server:
   error:
     include-message: always
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
   datasource:
     url: jdbc:postgresql://localhost/review-db
     username: devkh
-    password: devkh@10
+    password: devKH@10
     hikari:
       initialization-fail-timeout: 60000
 
