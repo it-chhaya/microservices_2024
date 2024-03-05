@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+import java.util.logging.Level;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,36 +25,50 @@ public class ProductServiceImpl implements ProductService {
 	private final ProductMapper productMapper;
 
 	@Override
-	public ProductDto createProduct(ProductDto body) {
-		try {
-			Product product = productMapper.fromProductDto(body);
-			Product newProduct = productRepository.save(product);
+	public Mono<ProductDto> createProduct(ProductDto body) {
 
-			log.debug("createProduct: entity created for productId: {}", body.productId());
-			return productMapper.toProductDto(newProduct);
-		} catch (DuplicateKeyException e) {
-			throw new InvalidInputException("Duplicate key, Product ID: " + body.productId());
+		if (body.productId() < 1) {
+			throw new InvalidInputException("Invalid productID: " + body.productId());
 		}
+
+		Product product = productMapper.fromProductDto(body);
+
+		return productRepository.save(product)
+				.log(log.getName(), Level.FINE)
+				.onErrorMap(
+						DuplicateKeyException.class,
+						ex -> new InvalidInputException("Duplicate key, Product ID: " + body.productId())
+				)
+				.map(productMapper::toProductDto);
 	}
 
 	@Override
-	public ProductDto findProductById(Long productId) {
+	public Mono<ProductDto> findProductById(Long productId) {
 
 		if (productId < 1) {
 			throw new InvalidInputException("Invalid productId: " + productId);
 		}
 
-		if (productId == 13) {
-			throw new NotFoundException("No product found for productId: " + productId);
-		}
+		log.info("Will get product info for ID={}", productId);
 
-		return new ProductDto(productId, "name-" + productId, 123, serviceUtil.getServiceAddress());
+		return productRepository.findByProductId(productId)
+				.switchIfEmpty(Mono.error(new NotFoundException("No product found for productId: " + productId)))
+				.log(log.getName(), Level.FINE)
+				.map(productMapper::toProductDto);
 	}
 
 	@Override
-	public void deleteProduct(Long productId) {
+	public Mono<Void> deleteProduct(Long productId) {
+
+		if (productId < 1) {
+			throw new InvalidInputException("Invalid productId: " + productId);
+		}
+
 		log.debug("deleteProduct: tries to delete an entity with productId: {}", productId);
-		productRepository.findByProductId(productId)
-				.ifPresent(productRepository::delete);
+		return productRepository.findByProductId(productId)
+				.log(log.getName(), Level.FINE)
+				.map(productRepository::delete)
+				.flatMap(voidMono -> voidMono);
 	}
+
 }

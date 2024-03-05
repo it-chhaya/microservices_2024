@@ -1,6 +1,8 @@
 package co.istad.api.core.review;
 
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -20,12 +22,12 @@ public interface ReviewService {
 			value    = "/reviews",
 			consumes = "application/json",
 			produces = "application/json")
-	ReviewDto createReview(@RequestBody ReviewDto body);
+	Mono<ReviewDto> createReview(@RequestBody ReviewDto body);
 
 	@GetMapping(
 			value = "/reviews",
 			produces = "application/json")
-	List<ReviewDto> getReviews(@RequestParam(value = "productId") Long productId);
+	Flux<ReviewDto> getReviews(@RequestParam(value = "productId") Long productId);
 
 	/**
 	 * Sample usage: "curl -X DELETE $HOST:$PORT/reviews?productId=1".
@@ -33,6 +35,6 @@ public interface ReviewService {
 	 * @param productId ID of the product
 	 */
 	@DeleteMapping(value = "/reviews")
-	void deleteReviews(@RequestParam(value = "productId")  Long productId);
+	Mono<Void> deleteReviews(@RequestParam(value = "productId")  Long productId);
 
 }

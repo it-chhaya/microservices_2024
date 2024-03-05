@@ -2,12 +2,13 @@ package co.istad.core.product.persistence;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
-public interface ProductRepository extends PagingAndSortingRepository<Product, String>,
-        CrudRepository<Product, String> {
+public interface ProductRepository extends ReactiveCrudRepository<Product, String> {
 
-    Optional<Product> findByProductId(Long productId);
+    Mono<Product> findByProductId(Long productId);
 
 }

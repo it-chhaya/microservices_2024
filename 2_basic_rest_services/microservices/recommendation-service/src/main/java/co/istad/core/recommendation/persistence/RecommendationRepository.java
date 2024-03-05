@@ -1,11 +1,10 @@
 package co.istad.core.recommendation.persistence;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
+public interface RecommendationRepository extends ReactiveCrudRepository<Recommendation, String> {
 
-public interface RecommendationRepository extends CrudRepository<Recommendation, String> {
-
-    List<Recommendation> findByProductId(Long productId);
+    Flux<Recommendation> findByProductId(Long productId);
 
 }

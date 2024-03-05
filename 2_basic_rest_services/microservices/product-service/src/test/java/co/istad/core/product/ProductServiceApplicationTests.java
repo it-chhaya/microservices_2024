@@ -1,20 +1,25 @@
 package co.istad.core.product;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static reactor.core.publisher.Mono.just;
 
 import co.istad.api.core.product.ProductDto;
+import co.istad.api.event.Event;
+import co.istad.api.exception.InvalidInputException;
 import co.istad.core.product.persistence.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.time.ZonedDateTime;
+import java.util.function.Consumer;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class ProductServiceApplicationTests extends MongoDbTestBase {
@@ -23,9 +28,13 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 
 	@Autowired private ProductRepository repository;
 
+	@Autowired
+	@Qualifier("messageProcessor")
+	private Consumer<Event<Long, ProductDto>> messageProcessor;
+
 	@BeforeEach
 	void setupDb() {
-		repository.deleteAll();
+		repository.deleteAll().block();
 	}
 
 	@Test
@@ -33,25 +42,34 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 
 		Long productId = 1L;
 
-		postAndVerifyProduct(productId, OK);
+		assertNull(repository.findByProductId(productId).block());
+		assertEquals(0, repository.count().block());
 
-		assertTrue(repository.findByProductId(productId).isPresent());
+		sendCreateProductEvent(productId);
 
-		getAndVerifyProduct(productId, OK).jsonPath("$.productId").isEqualTo(productId);
+		assertNotNull(repository.findByProductId(productId).block());
+		assertEquals(1, (long)repository.count().block());
+
+		getAndVerifyProduct(productId, OK)
+				.jsonPath("$.productId").isEqualTo(productId);
 	}
 
-	//@Test
+	@Test
 	void duplicateError() {
 
 		Long productId = 1L;
 
-		postAndVerifyProduct(productId, OK);
+		assertNull(repository.findByProductId(productId).block());
 
-		assertTrue(repository.findByProductId(productId).isPresent());
+		sendCreateProductEvent(productId);
 
-		postAndVerifyProduct(productId, UNPROCESSABLE_ENTITY)
-				.jsonPath("$.path").isEqualTo("/product")
-				.jsonPath("$.message").isEqualTo("Duplicate key, Product Id: " + productId);
+		assertNotNull(repository.findByProductId(productId).block());
+
+		InvalidInputException thrown = assertThrows(
+				InvalidInputException.class,
+				() -> sendCreateProductEvent(productId),
+				"Expected a InvalidInputException here!");
+		assertEquals("Duplicate key, Product Id: " + productId, thrown.getMessage());
 	}
 
 	@Test
@@ -59,18 +77,17 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 
 		Long productId = 1L;
 
-		postAndVerifyProduct(productId, OK);
-		assertTrue(repository.findByProductId(productId).isPresent());
+		sendDeleteProductEvent(productId);
+		assertNotNull(repository.findByProductId(productId).block());
 
-		deleteAndVerifyProduct(productId, OK);
-		assertFalse(repository.findByProductId(productId).isPresent());
+		sendDeleteProductEvent(productId);
+		assertNull(repository.findByProductId(productId).block());
 
-		deleteAndVerifyProduct(productId, OK);
+		sendDeleteProductEvent(productId);
 	}
 
-	//@Test
+	@Test
 	void getProductInvalidParameterString() {
-
 		getAndVerifyProduct("/no-integer", BAD_REQUEST)
 				.jsonPath("$.path").isEqualTo("/products/no-integer")
 				.jsonPath("$.message").isEqualTo("Type mismatch.");
@@ -78,7 +95,6 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 
 	@Test
 	void getProductNotFound() {
-
 		Long productIdNotFound = 13L;
 		getAndVerifyProduct(productIdNotFound, NOT_FOUND)
 				.jsonPath("$.path").isEqualTo("/products/" + productIdNotFound)
@@ -109,24 +125,28 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 				.expectBody();
 	}
 
-	private WebTestClient.BodyContentSpec postAndVerifyProduct(Long productId, HttpStatus expectedStatus) {
-		ProductDto product = new ProductDto(productId, "Name " + productId, 1, "SA");
-		return client.post()
-				.uri("/products")
-				.body(just(product), ProductDto.class)
-				.accept(APPLICATION_JSON)
-				.exchange()
-				.expectStatus().isEqualTo(expectedStatus)
-				.expectHeader().contentType(APPLICATION_JSON)
-				.expectBody();
+	private void sendCreateProductEvent(Long productId) {
+		ProductDto product = ProductDto.builder()
+				.productId(productId)
+				.name("Name " + productId)
+				.weight(Math.toIntExact(productId))
+				.serviceAddress("SA")
+				.build();
+		Event<Long, ProductDto> event = Event.<Long, ProductDto>builder()
+				.eventType(Event.Type.CREATE)
+				.key(productId)
+				.data(product)
+				.eventCreatedAt(ZonedDateTime.now())
+				.build();
+		messageProcessor.accept(event);
 	}
 
-	private WebTestClient.BodyContentSpec deleteAndVerifyProduct(Long productId, HttpStatus expectedStatus) {
-		return client.delete()
-				.uri("/products/" + productId)
-				.accept(APPLICATION_JSON)
-				.exchange()
-				.expectStatus().isEqualTo(expectedStatus)
-				.expectBody();
+	private void sendDeleteProductEvent(Long productId) {
+		Event<Long, ProductDto> event = Event.<Long, ProductDto>builder()
+				.eventType(Event.Type.DELETE)
+				.key(productId)
+				.eventCreatedAt(ZonedDateTime.now())
+				.build();
+		messageProcessor.accept(event);
 	}
 }

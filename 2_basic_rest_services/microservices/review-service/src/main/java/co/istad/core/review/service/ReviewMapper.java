@@ -22,7 +22,7 @@ public interface ReviewMapper {
 	})
 	Review apiToEntity(ReviewDto api);
 
-	List<Review> entityListToApiList(List<Review> entity);
+	List<ReviewDto> entityListToApiList(List<Review> entity);
 
 	List<Review> apiListToEntityList(List<Review> api);
 

@@ -2,6 +2,7 @@ package co.istad.api.core.product;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 public interface ProductService {
 
@@ -19,7 +20,7 @@ public interface ProductService {
 			value    = "/products",
 			consumes = "application/json",
 			produces = "application/json")
-	ProductDto createProduct(@RequestBody ProductDto body);
+	Mono<ProductDto> createProduct(@RequestBody ProductDto body);
 
 	/**
 	 * Sample usage: "curl $HOST:$PORT/products/1".
@@ -28,7 +29,7 @@ public interface ProductService {
 	 * @return the product, if found, else null
 	 */
 	@GetMapping(value = "/products/{productId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	ProductDto findProductById(@PathVariable Long productId);
+	Mono<ProductDto> findProductById(@PathVariable Long productId);
 
 	/**
 	 * Sample usage: "curl -X DELETE $HOST:$PORT/products/1".
@@ -36,6 +37,6 @@ public interface ProductService {
 	 * @param productId ID of the product
 	 */
 	@DeleteMapping(value = "/products/{productId}")
-	void deleteProduct(@PathVariable Long productId);
+	Mono<Void> deleteProduct(@PathVariable Long productId);
 
 }

@@ -10,9 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,44 +27,45 @@ public class RecommendationServiceImpl implements RecommendationService {
 	private final RecommendationMapper recommendationMapper;
 
 	@Override
-	public RecommendationDto createRecommendation(RecommendationDto body) {
-		try {
-			Recommendation recommendation = recommendationMapper.fromRecommendationDto(body);
-			Recommendation newRecommendation = recommendationRepository.save(recommendation);
+	public Mono<RecommendationDto> createRecommendation(RecommendationDto body) {
 
-			log.debug("createRecommendation: created a recommendation entity: {}/{}", body.productId(), body.recommendationId());
-			return recommendationMapper.toRecommendationDto(newRecommendation);
-		} catch (DuplicateKeyException e) {
-			throw new InvalidInputException("Duplicate key, Product Id: " + body.productId() + ", Recommendation Id:" + body.recommendationId());
+		if (body.productId() < 1) {
+			throw new InvalidInputException("Invalid productId: " + body.getProductId());
 		}
+
+		Recommendation recommendation = recommendationMapper.fromRecommendationDto(body);
+
+		return recommendationRepository.save(recommendation)
+				.log(log.getName(), Level.FINE)
+				.onErrorMap(DuplicateKeyException.class,
+						ex -> new InvalidInputException("Duplicate key, Product Id: " + body.productId() + ", Recommendation Id:" + body.recommendationId())
+				)
+				.map(recommendationMapper::toRecommendationDto);
 	}
 
 	@Override
-	public List<RecommendationDto> getRecommendations(Long productId) {
+	public Flux<RecommendationDto> getRecommendations(Long productId) {
 
 		if (productId < 1) {
 			throw new InvalidInputException("Invalid productId: " + productId);
 		}
 
-		if (productId == 113) {
-			log.debug("No recommendations found for productId: {}", productId);
-			return new ArrayList<>();
-		}
+		log.info("Will get recommendations for product with id={}", productId);
 
-		List<RecommendationDto> list = new ArrayList<>();
-		list.add(new RecommendationDto(productId, 1L, "Author 1", 1, "Content 1", serviceUtil.getServiceAddress()));
-		list.add(new RecommendationDto(productId, 2L, "Author 2", 2, "Content 2", serviceUtil.getServiceAddress()));
-		list.add(new RecommendationDto(productId, 3L, "Author 3", 3, "Content 3", serviceUtil.getServiceAddress()));
-
-		log.debug("/recommendation response size: {}", list.size());
-
-		return list;
+		return recommendationRepository.findByProductId(productId)
+				.log(log.getName(), Level.FINE)
+				.map(recommendationMapper::toRecommendationDto);
 	}
 
 	@Override
-	public void deleteRecommendations(Long productId) {
+	public Mono<Void> deleteRecommendations(Long productId) {
+
+		if (productId < 1) {
+			throw new InvalidInputException("Invalid productId: " + productId);
+		}
+
 		log.debug("deleteRecommendations: tries to delete recommendations for the product with productId: {}", productId);
-		recommendationRepository.deleteAll(recommendationRepository.findByProductId(productId));
+		return recommendationRepository.deleteAll(recommendationRepository.findByProductId(productId));
 	}
 
 }
