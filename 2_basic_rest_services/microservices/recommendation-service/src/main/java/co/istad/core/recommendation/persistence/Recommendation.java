@@ -26,7 +26,7 @@ public class Recommendation {
     private Long recommendationId;
     private Long productId;
     private String author;
-    private Integer rating;
+    private Integer rate;
     private String content;
 
 }

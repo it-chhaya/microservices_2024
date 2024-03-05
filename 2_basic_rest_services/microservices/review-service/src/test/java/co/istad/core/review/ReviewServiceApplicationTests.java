@@ -1,7 +1,6 @@
 package co.istad.core.review;
 
 import co.istad.api.core.review.ReviewDto;
-import co.istad.core.review.persistence.Review;
 import co.istad.core.review.persistence.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ReviewDtoServiceApplicationTests {
+class ReviewServiceApplicationTests {
 
 	@Autowired
 	private WebTestClient client;

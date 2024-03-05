@@ -7,7 +7,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 public abstract class PostgresqlTestBase {
 
-    private static JdbcDatabaseContainer database = new PostgreSQLContainer("postgres:42.7.2")
+    private static JdbcDatabaseContainer database = new PostgreSQLContainer("postgres:15")
             .withStartupTimeoutSeconds(300);
 
     static {
