@@ -13,6 +13,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.when;
 import static java.util.Collections.singletonList;
@@ -34,28 +36,48 @@ class ProductDtoCompositeServiceApplicationTests {
 	void setUp() {
 
 		when(compositeIntegration.findProductById(PRODUCT_ID_OK))
-				.thenReturn(new ProductDto(PRODUCT_ID_OK, "name", 1, "mock-address"));
+				.thenReturn(Mono.just(ProductDto.builder()
+						.productId(PRODUCT_ID_OK)
+						.name("name")
+						.weight(1)
+						.serviceAddress("mock-address")
+						.build()));
+
 		when(compositeIntegration.getRecommendations(PRODUCT_ID_OK))
-				.thenReturn(singletonList(new RecommendationDto(PRODUCT_ID_OK, 1L, "author", 1, "content", "mock address")));
+				.thenReturn(Flux.fromIterable(singletonList(
+						RecommendationDto.builder()
+								.productId(PRODUCT_ID_OK)
+								.recommendationId(1L)
+								.author("author")
+								.rate(1)
+								.content("content")
+								.serviceAddress("mock address")
+								.build()
+				)));
+
 		when(compositeIntegration.getReviews(PRODUCT_ID_OK))
-				.thenReturn(singletonList(new ReviewDto(PRODUCT_ID_OK, 1L, "author", "subject", "content", "mock address")));
+				.thenReturn(Flux.fromIterable(singletonList(
+						ReviewDto.builder()
+								.productId(PRODUCT_ID_OK)
+								.reviewId(1L)
+								.author("author")
+								.subject("subject")
+								.content("content")
+								.serviceAddress("mock address")
+								.build()
+				)));
 
 		when(compositeIntegration.findProductById(PRODUCT_ID_NOT_FOUND))
 				.thenThrow(new NotFoundException("NOT FOUND: " + PRODUCT_ID_NOT_FOUND));
 
 		when(compositeIntegration.findProductById(PRODUCT_ID_INVALID))
 				.thenThrow(new InvalidInputException("INVALID: " + PRODUCT_ID_INVALID));
+
 	}
 
 	@Test
 	void getProductById() {
-		client.get()
-				.uri("/product-composite/" + PRODUCT_ID_OK)
-				.accept(MediaType.APPLICATION_JSON)
-				.exchange()
-				.expectStatus().isOk()
-				.expectHeader().contentType(MediaType.APPLICATION_JSON)
-				.expectBody()
+		getAndVerifyProduct(PRODUCT_ID_OK, HttpStatus.OK)
 				.jsonPath("$.productId").isEqualTo(PRODUCT_ID_OK)
 				.jsonPath("$.recommendations.length()").isEqualTo(1)
 				.jsonPath("$.reviews.length()").isEqualTo(1);
@@ -63,29 +85,26 @@ class ProductDtoCompositeServiceApplicationTests {
 
 	@Test
 	void getProductNotFound() {
-		client.get()
-				.uri("/product-composite/" + PRODUCT_ID_NOT_FOUND)
-				.accept(MediaType.APPLICATION_JSON)
-				.exchange()
-				.expectStatus().isNotFound()
-				.expectHeader().contentType(MediaType.APPLICATION_JSON)
-				.expectBody()
+		getAndVerifyProduct(PRODUCT_ID_NOT_FOUND, HttpStatus.NOT_FOUND)
 				.jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_NOT_FOUND)
 				.jsonPath("$.message").isEqualTo("NOT FOUND: " + PRODUCT_ID_NOT_FOUND);
 	}
 
 	@Test
 	void getProductInvalidInput() {
-
-		client.get()
-				.uri("/product-composite/" + PRODUCT_ID_INVALID)
-				.accept(MediaType.APPLICATION_JSON)
-				.exchange()
-				.expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-				.expectHeader().contentType(MediaType.APPLICATION_JSON)
-				.expectBody()
+		getAndVerifyProduct(PRODUCT_ID_INVALID, HttpStatus.UNPROCESSABLE_ENTITY)
 				.jsonPath("$.path").isEqualTo("/product-composite/" + PRODUCT_ID_INVALID)
 				.jsonPath("$.message").isEqualTo("INVALID: " + PRODUCT_ID_INVALID);
+	}
+
+	private WebTestClient.BodyContentSpec getAndVerifyProduct(Long productId, HttpStatus expectedStatus) {
+		return client.get()
+				.uri("/product-composite/" + productId)
+				.accept(MediaType.APPLICATION_JSON)
+				.exchange()
+				.expectStatus().isEqualTo(expectedStatus)
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody();
 	}
 
 }

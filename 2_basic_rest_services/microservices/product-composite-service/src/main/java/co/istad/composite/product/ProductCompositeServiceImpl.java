@@ -35,10 +35,49 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
 
             log.info("Will create a new composite entity for product.id: {}", body.getProductId());
 
+            ProductDto productDto = ProductDto.builder()
+                    .productId(body.getProductId())
+                    .name(body.getName())
+                    .weight(body.getWeight())
+                    .build();
 
+            monoList.add(integration.createProduct(productDto));
 
+            if (body.getRecommendations() != null) {
+                body.getRecommendations().forEach(r -> {
+                    RecommendationDto recommendationDto = RecommendationDto.builder()
+                            .productId(body.getProductId())
+                            .recommendationId(r.recommendationId())
+                            .author(r.author())
+                            .rate(r.rate())
+                            .content(r.content())
+                            .build();
+                    monoList.add(integration.createRecommendation(recommendationDto));
+                });
+            }
+
+            if (body.getReviews() != null) {
+                body.getReviews().forEach(r -> {
+                    ReviewDto review = ReviewDto.builder()
+                            .productId(body.getProductId())
+                            .reviewId(r.reviewId())
+                            .author(r.author())
+                            .subject(r.subject())
+                            .content(r.content())
+                            .build();
+                    monoList.add(integration.createReview(review));
+                });
+            }
+
+            log.debug("createCompositeProduct: composite entities created for productId: {}", body.getProductId());
+
+            return Mono.zip(r -> "", monoList.toArray(new Mono[0]))
+                    .doOnError(ex -> log.warn("createCompositeProduct failed: {}", ex.toString()))
+                    .then();
+        } catch (RuntimeException ex) {
+            log.warn("createCompositeProduct failed: {}", ex.toString());
+            throw ex;
         }
-
     }
 
     @Override

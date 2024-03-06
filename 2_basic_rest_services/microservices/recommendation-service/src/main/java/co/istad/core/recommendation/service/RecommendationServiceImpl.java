@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 @RestController
@@ -30,7 +28,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 	public Mono<RecommendationDto> createRecommendation(RecommendationDto body) {
 
 		if (body.productId() < 1) {
-			throw new InvalidInputException("Invalid productId: " + body.getProductId());
+			throw new InvalidInputException("Invalid productId: " + body.productId());
 		}
 
 		Recommendation recommendation = recommendationMapper.fromRecommendationDto(body);

@@ -1,5 +1,8 @@
 package co.istad.api.core.recommendation;
 
+import lombok.Builder;
+
+@Builder
 public record RecommendationDto(
 		Long productId,
 		Long recommendationId,

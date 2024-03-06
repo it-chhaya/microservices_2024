@@ -5,7 +5,37 @@ logging:
     root: INFO
     co.istad.api: DEBUG
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
-spring.data.mongodb:
-  host: localhost
-  port: 27017
-  database: product-db
+
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: product-db
+  cloud:
+    function:
+      definition: messageProcessor
+    stream:
+      default-binder: rabbit
+      default:
+        contentType: application/json
+      bindings:
+        messageProcessor-in-0:
+          destination: products
+          group: productsGroup
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 500
+            back-off-max-interval: 1000
+            back-off-multiplier: 2.0
+      rabbit:
+        bindings:
+          messageProcessor-in-0:
+            consumer:
+              auto-bind-dlq: true
+              republish-to-dlq: true
+      kafka:
+        bindings:
+          messageProcessor-in-0:
+            consumer:
+              enable-dlq: true
