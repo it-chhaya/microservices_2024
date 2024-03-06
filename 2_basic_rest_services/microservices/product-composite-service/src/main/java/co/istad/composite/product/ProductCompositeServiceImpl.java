@@ -7,110 +7,113 @@ import co.istad.api.core.review.ReviewDto;
 import co.istad.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
 public class ProductCompositeServiceImpl implements ProductCompositeService {
 
-	private final ServiceUtil serviceUtil;
-	private final ProductCompositeIntegration integration;
+    private final ServiceUtil serviceUtil;
+    private final ProductCompositeIntegration integration;
 
-	public ProductCompositeServiceImpl(ServiceUtil serviceUtil, ProductCompositeIntegration integration) {
-		this.serviceUtil = serviceUtil;
-		this.integration = integration;
-	}
+    public ProductCompositeServiceImpl(ServiceUtil serviceUtil, ProductCompositeIntegration integration) {
+        this.serviceUtil = serviceUtil;
+        this.integration = integration;
+    }
 
-	@Override
-	public void createProduct(ProductAggregate body) {
-		try {
-			log.debug("createCompositeProduct: create new composite entity for productId: {}", body.getProductId());
+    @Override
+    public Mono<Void> createProduct(ProductAggregate body) {
 
-			ProductDto product = new ProductDto(body.getProductId(), body.getName(), body.getWeight(), null);
-			integration.createProduct(product);
+        try {
 
-			if (body.getRecommendations() != null) {
-				body.getRecommendations().forEach(r -> {
-					RecommendationDto recommendation = new RecommendationDto(body.getProductId(), r.recommendationId(), r.author(), r.rate(), r.content(), null);
-					integration.createRecommendation(recommendation);
-				});
-			}
+            List<Mono> monoList = new ArrayList<>();
 
-			if (body.getReviews() != null) {
-				body.getReviews().forEach(r -> {
-					ReviewDto review = new ReviewDto(body.getProductId(), r.reviewId(), r.author(), r.subject(), r.content(), null);
-					integration.createReview(review);
-				});
-			}
+            log.info("Will create a new composite entity for product.id: {}", body.getProductId());
 
-			log.debug("createCompositeProduct: composite entities created for productId: {}", body.getProductId());
-		} catch (RuntimeException e) {
-			log.warn("createCompositeProduct failed", e);
-			throw e;
-		}
-	}
 
-	@Override
-	public ProductAggregate getProduct(Long productId) {
 
-		ProductDto productDto = integration.findProductById(productId);
-		List<RecommendationDto> recommendationDtos = integration.getRecommendations(productId);
-		List<ReviewDto> reviewDtos = integration.getReviews(productId);
+        }
 
-		return createProductAggregate(productDto, recommendationDtos, reviewDtos, serviceUtil.getServiceAddress());
-	}
+    }
 
-	@Override
-	public void deleteProduct(Long productId) {
-		log.debug("deleteCompositeProduct: Deletes a product aggregate for productId: {}", productId);
+    @Override
+    public Mono<ProductAggregate> getProduct(Long productId) {
 
-		integration.deleteProduct(productId);
+        log.info("Will get composite product info for product.id={}", productId);
 
-		integration.deleteRecommendations(productId);
+        return Mono.zip(objects ->
+                                createProductAggregate((ProductDto) objects[0], (List<RecommendationDto>) objects[1], (List<ReviewDto>) objects[2], serviceUtil.getServiceAddress()),
+                        integration.findProductById(productId),
+                        integration.getRecommendations(productId).collectList(),
+                        integration.getReviews(productId).collectList()
+                )
+                .doOnError(ex -> log.warn("getCompositeProduct failed: {}", ex.toString()))
+                .log();
+    }
 
-		integration.deleteReviews(productId);
+    @Override
+    public Mono<Void> deleteProduct(Long productId) {
 
-		log.debug("deleteCompositeProduct: aggregate entities deleted for productId: {}", productId);
-	}
+        try {
 
-	private ProductAggregate createProductAggregate(
-			ProductDto productDto,
-			List<RecommendationDto> recommendationDtos,
-			List<ReviewDto> reviewDtos,
-			String serviceAddress) {
+            log.info("Will delete a product aggregate for product.id: {}", productId);
 
-		// 1. Setup product info
-		Long productId = productDto.productId();
-		String name = productDto.name();
-		int weight = productDto.weight();
+            return Mono.zip(
+                            r -> "",
+                            integration.deleteProduct(productId),
+                            integration.deleteRecommendations(productId),
+                            integration.deleteReviews(productId)
+                    )
+                    .doOnError(ex -> log.warn("delete failed: {}", ex.toString()))
+                    .log(log.getName(), Level.FINE)
+                    .then();
+        } catch (RuntimeException ex) {
+            log.warn("deleteCompositeProduct failed: {}", ex.toString());
+            throw ex;
+        }
+    }
 
-		// 2. Copy summary recommendation info, if available
-		List<RecommendationSummary> recommendationSummaries =
-				(recommendationDtos == null) ? null : recommendationDtos.stream()
-						.map(r -> new RecommendationSummary(r.recommendationId(), r.author(), r.rate(), r.content()))
-						.collect(Collectors.toList());
+    private ProductAggregate createProductAggregate(
+            ProductDto productDto,
+            List<RecommendationDto> recommendationDtoList,
+            List<ReviewDto> reviewDtoList,
+            String serviceAddress) {
 
-		// 3. Copy summary review info, if available
-		List<ReviewSummary> reviewSummaries =
-				(reviewDtos == null) ? null : reviewDtos.stream()
-						.map(r -> new ReviewSummary(r.reviewId(), r.author(), r.subject(), r.content()))
-						.collect(Collectors.toList());
+        // 1. Setup product info
+        Long productId = productDto.productId();
+        String name = productDto.name();
+        int weight = productDto.weight();
 
-		// 4. Create info regarding the involved microservices addresses
-		String productAddress = productDto.serviceAddress();
-		String reviewAddress = (reviewDtos != null && !reviewDtos.isEmpty()) ? reviewDtos.get(0).serviceAddress() : "";
-		String recommendationAddress = (recommendationDtos != null && !recommendationDtos.isEmpty()) ? recommendationDtos.get(0).serviceAddress() : "";
-		ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress, productAddress, reviewAddress, recommendationAddress);
+        // 2. Copy summary recommendation info, if available
+        List<RecommendationSummary> recommendationSummaries =
+                (recommendationDtoList == null) ? null : recommendationDtoList.stream()
+                        .map(r -> new RecommendationSummary(r.recommendationId(), r.author(), r.rate(), r.content()))
+                        .collect(Collectors.toList());
 
-		return ProductAggregate.builder()
-				.productId(productId)
-				.name(name)
-				.weight(weight)
-				.recommendations(recommendationSummaries)
-				.reviews(reviewSummaries)
-				.serviceAddresses(serviceAddresses)
-				.build();
-	}
+        // 3. Copy summary review info, if available
+        List<ReviewSummary> reviewSummaries =
+                (reviewDtoList == null) ? null : reviewDtoList.stream()
+                        .map(r -> new ReviewSummary(r.reviewId(), r.author(), r.subject(), r.content()))
+                        .collect(Collectors.toList());
+
+        // 4. Create info regarding the involved microservices addresses
+        String productAddress = productDto.serviceAddress();
+        String reviewAddress = (reviewDtoList != null && !reviewDtoList.isEmpty()) ? reviewDtoList.get(0).serviceAddress() : "";
+        String recommendationAddress = (recommendationDtoList != null && !recommendationDtoList.isEmpty()) ? recommendationDtoList.get(0).serviceAddress() : "";
+        ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress, productAddress, reviewAddress, recommendationAddress);
+
+        return ProductAggregate.builder()
+                .productId(productId)
+                .name(name)
+                .weight(weight)
+                .recommendations(recommendationSummaries)
+                .reviews(reviewSummaries)
+                .serviceAddresses(serviceAddresses)
+                .build();
+    }
 }
