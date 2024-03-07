@@ -5,5 +5,13 @@ spring:
   data:
     mongodb:
       host: mongodb
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka
+  rabbitmq:
+    host: rabbitmq
+
 server:
   port: 8080

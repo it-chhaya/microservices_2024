@@ -1,10 +1,19 @@
 server:
   port: 7001
+
 logging:
   level:
     root: INFO
-    co.istad.api: DEBUG
-    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    co.istad: DEBUG
+    org.springframework.data.mongodb.core.ReactiveMongoTemplate: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always
+    web:
+      exposure:
+        include: "*"
 
 spring:
   data:
@@ -39,3 +48,11 @@ spring:
           messageProcessor-in-0:
             consumer:
               enable-dlq: true
+        binder:
+          brokers: 127.0.0.1
+          defaultBrokerPort: 9092
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest

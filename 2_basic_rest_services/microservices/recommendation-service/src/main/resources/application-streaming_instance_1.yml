@@ -1,0 +1,7 @@
+spring:
+  cloud:
+    stream:
+      bindings:
+        messageProcessor-in-0:
+          consumer:
+            instance-index: 1

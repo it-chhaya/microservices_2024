@@ -24,9 +24,11 @@ import java.util.function.Consumer;
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 class ProductServiceApplicationTests extends MongoDbTestBase {
 
-	@Autowired private WebTestClient client;
+	@Autowired
+	private WebTestClient client;
 
-	@Autowired private ProductRepository repository;
+	@Autowired
+	private ProductRepository repository;
 
 	@Autowired
 	@Qualifier("messageProcessor")
@@ -48,7 +50,7 @@ class ProductServiceApplicationTests extends MongoDbTestBase {
 		sendCreateProductEvent(productId);
 
 		assertNotNull(repository.findByProductId(productId).block());
-		assertEquals(1, (long)repository.count().block());
+		assertEquals(1, (long) repository.count().block());
 
 		getAndVerifyProduct(productId, OK)
 				.jsonPath("$.productId").isEqualTo(productId);

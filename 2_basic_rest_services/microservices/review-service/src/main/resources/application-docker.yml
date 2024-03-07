@@ -4,5 +4,12 @@ spring:
       on-profile: docker
   datasource:
     url: jdbc:postgresql://postgresql/review-db
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: kafka
+  rabbitmq:
+    host: rabbitmq
 server:
   port: 8080
