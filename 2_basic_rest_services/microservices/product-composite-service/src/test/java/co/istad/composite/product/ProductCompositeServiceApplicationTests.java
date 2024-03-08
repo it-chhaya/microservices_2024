@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 import static java.util.Collections.singletonList;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ProductDtoCompositeServiceApplicationTests {
+class ProductCompositeServiceApplicationTests {
 
 	private static final Long PRODUCT_ID_OK = 1L;
 	private static final Long PRODUCT_ID_NOT_FOUND = 2L;

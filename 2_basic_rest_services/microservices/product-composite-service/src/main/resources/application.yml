@@ -1,6 +1,54 @@
 server.port: 7000
 server.error.include-message: always
 
+spring:
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  cloud:
+    stream:
+      bindings:
+        products-out-0:
+          destination: products
+          producer:
+            required-groups:
+              - auditGroup
+            partition-key-expression: headers['partitionKey']
+            partition-count: 2
+        recommendations-out-0:
+          destination: recommendations
+          producer:
+            required-groups:
+              - auditGroup
+        reviews-out-0:
+          destination: reviews
+          producer:
+            required-groups:
+              - auditGroup
+      default-binder: rabbit
+      default:
+        contentType: application/json
+      kafka:
+        binder:
+          brokers: 127.0.0.1
+          defaultBrokerPort: 9092
+
+logging:
+  level:
+    root: INFO
+    co.istad: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 app:
   product-service:
     host: localhost
@@ -11,11 +59,6 @@ app:
   review-service:
     host: localhost
     port: 7003
-
-logging:
-  level:
-    root: INFO
-    se.magnus: DEBUG
 
 springdoc:
   swagger-ui:

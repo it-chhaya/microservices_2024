@@ -8,6 +8,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   recommendation:
     build: microservices/recommendation-service
@@ -15,6 +17,8 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       mongodb:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   review:
@@ -24,6 +28,8 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   product-composite:
     build: microservices/product-composite-service
@@ -31,6 +37,9 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   mongodb:
     image: mongo:7.0.6
@@ -56,3 +65,14 @@ services:
       interval: 20s  # Check every 20 seconds
       timeout: 3s     # Wait up to 3 seconds for successful check
       retries: 5     # Retry up to 5 times before marking unhealthy
+
+  rabbitmq:
+    image: rabbitmq:3.11.8-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 5s
+      timeout: 2s
+      retries: 60
