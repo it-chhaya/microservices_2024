@@ -25,18 +25,18 @@ public class MessageProcessorConfig {
 			public void accept(Event<Long, RecommendationDto> event) {
 				log.info("Process message created at {}...",  event);
 
-				switch (event.eventType()) {
+				switch (event.getEventType()) {
 					case CREATE -> {
-						RecommendationDto recommendationDto = event.data();
+						RecommendationDto recommendationDto = event.getData();
 						log.info("Create recommendation with ID: {}", recommendationDto.productId());
 					}
 					case DELETE -> {
-						Long recommendationId = event.key();
+						Long recommendationId = event.getKey();
 						log.info("Delete recommendation with RecommendationID: {}", recommendationId);
 						recommendationService.deleteRecommendations(recommendationId).block();
 					}
 					default -> {
-						String errorMessage = "Incorrect event type: " + event.eventType() + ", expected a CREATE or DELETE event";
+						String errorMessage = "Incorrect event type: " + event.getEventType() + ", expected a CREATE or DELETE event";
 						log.warn(errorMessage);
 						throw new EventProcessingException(errorMessage);
 					}

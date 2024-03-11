@@ -12,15 +12,13 @@ import co.istad.api.exception.NotFoundException;
 import co.istad.util.http.HttpErrorInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
@@ -28,12 +26,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.logging.Level;
-
-import static org.springframework.http.HttpMethod.GET;
 
 @Component
 @Slf4j
@@ -46,9 +39,11 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	private final String reviewServiceUrl;
 
 	private final Scheduler publishEventScheduler;
+	private final StreamBridge streamBridge;
 
 	public ProductCompositeIntegration(
 			Scheduler publishEventScheduler,
+			StreamBridge streamBridge,
 			WebClient.Builder webClient,
 			ObjectMapper mapper,
 			@Value("${app.product-service.host}") String productServiceHost,
@@ -61,6 +56,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 		this.webClient = webClient.build();
 		this.mapper = mapper;
 		this.publishEventScheduler = publishEventScheduler;
+		this.streamBridge = streamBridge;
 
 		productServiceUrl = "http://" + productServiceHost + ":" + productServicePort + "/products";
 		recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendations";
@@ -72,11 +68,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 
 		return Mono.fromCallable(() -> {
 			sendMessage("products-out-0",
-					Event.builder()
-					.eventType(Event.Type.CREATE)
-					.key(body.productId())
-					.data(body)
-					.build());
+					new Event<>(Event.Type.CREATE, body.getProductId(), body));
 			return body;
 		}).subscribeOn(publishEventScheduler);
 
@@ -99,11 +91,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	@Override
 	public Mono<Void> deleteProduct(Long productId) {
 		return Mono.fromRunnable(() ->
-				sendMessage("products-out-0",
-						Event.builder()
-								.eventType(Event.Type.DELETE)
-								.key(productId)
-								.build()))
+				sendMessage("products-out-0", new Event<>(Event.Type.CREATE, productId, null)))
 				.subscribeOn(publishEventScheduler)
 				.then();
 	}
@@ -111,12 +99,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	@Override
 	public Mono<ReviewDto> createReview(ReviewDto body) {
 		return Mono.fromCallable(() -> {
-			sendMessage("reviews-out-0",
-					Event.builder()
-							.eventType(Event.Type.CREATE)
-							.key(body.productId())
-							.data(body)
-							.build());
+			sendMessage("reviews-out-0", new Event<>(Event.Type.CREATE, body.productId(), body));
 			return body;
 		}).subscribeOn(publishEventScheduler);
 	}
@@ -140,11 +123,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	@Override
 	public Mono<Void> deleteReviews(Long productId) {
 		return Mono.fromRunnable(() ->
-				sendMessage("reviews-out-0",
-						Event.builder()
-								.eventType(Event.Type.DELETE)
-								.key(productId)
-								.build()))
+				sendMessage("reviews-out-0", new Event<>(Event.Type.DELETE, productId, null)))
 				.subscribeOn(publishEventScheduler)
 				.then();
 	}
@@ -153,11 +132,7 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	public Mono<RecommendationDto> createRecommendation(RecommendationDto body) {
 
 		return Mono.fromCallable(() -> {
-			sendMessage("recommendations-out-0", Event.builder()
-					.eventType(Event.Type.CREATE)
-					.key(body.productId())
-					.data(body)
-					.build());
+			sendMessage("recommendations-out-0", new Event<>(Event.Type.CREATE, body.productId(), body));
 			return body;
 		}).subscribeOn(publishEventScheduler);
 
@@ -182,19 +157,16 @@ public class ProductCompositeIntegration implements ProductService, Recommendati
 	@Override
 	public Mono<Void> deleteRecommendations(Long productId) {
 		return Mono.fromRunnable(() -> sendMessage("reviews-out-0",
-				Event.builder()
-						.eventType(Event.Type.DELETE)
-						.key(productId)
-						.build()))
+						new Event<>(Event.Type.DELETE, productId, null)))
 				.subscribeOn(publishEventScheduler).then();
 	}
 
 	private void sendMessage(String bindingName, Event event) {
-		/*log.debug("Sending a {} message to {}", event.getEventType(), bindingName);
+		log.debug("Sending a {} message to {}", event.getEventType(), bindingName);
 		Message message = MessageBuilder.withPayload(event)
 				.setHeader("partitionKey", event.getKey())
 				.build();
-		streamBridge.send(bindingName, message);*/
+		streamBridge.send(bindingName, message);
 	}
 
 

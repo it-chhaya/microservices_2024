@@ -124,9 +124,9 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
             String serviceAddress) {
 
         // 1. Setup product info
-        Long productId = productDto.productId();
-        String name = productDto.name();
-        int weight = productDto.weight();
+        Long productId = productDto.getProductId();
+        String name = productDto.getName();
+        int weight = productDto.getWeight();
 
         // 2. Copy summary recommendation info, if available
         List<RecommendationSummary> recommendationSummaries =
@@ -141,7 +141,7 @@ public class ProductCompositeServiceImpl implements ProductCompositeService {
                         .collect(Collectors.toList());
 
         // 4. Create info regarding the involved microservices addresses
-        String productAddress = productDto.serviceAddress();
+        String productAddress = productDto.getServiceAddress();
         String reviewAddress = (reviewDtoList != null && !reviewDtoList.isEmpty()) ? reviewDtoList.get(0).serviceAddress() : "";
         String recommendationAddress = (recommendationDtoList != null && !recommendationDtoList.isEmpty()) ? recommendationDtoList.get(0).serviceAddress() : "";
         ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress, productAddress, reviewAddress, recommendationAddress);

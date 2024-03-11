@@ -27,8 +27,8 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public Mono<ProductDto> createProduct(ProductDto body) {
 
-		if (body.productId() < 1) {
-			throw new InvalidInputException("Invalid productID: " + body.productId());
+		if (body.getProductId() < 1) {
+			throw new InvalidInputException("Invalid productID: " + body.getProductId());
 		}
 
 		Product product = productMapper.fromProductDto(body);
@@ -37,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
 				.log(log.getName(), Level.FINE)
 				.onErrorMap(
 						DuplicateKeyException.class,
-						ex -> new InvalidInputException("Duplicate key, Product ID: " + body.productId())
+						ex -> new InvalidInputException("Duplicate key, Product ID: " + body.getProductId())
 				)
 				.map(productMapper::toProductDto);
 	}

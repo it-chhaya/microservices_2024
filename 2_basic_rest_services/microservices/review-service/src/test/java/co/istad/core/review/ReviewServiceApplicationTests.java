@@ -100,7 +100,7 @@ class ReviewServiceApplicationTests extends PostgresqlTestBase {
 	void getReviewsMissingParameter() {
 
 		getAndVerifyReviewsByProductId("", HttpStatus.BAD_REQUEST)
-				.jsonPath("$.path").isEqualTo("/review")
+				.jsonPath("$.path").isEqualTo("/reviews")
 				.jsonPath("$.message").isEqualTo("Required query parameter 'productId' is not present.");
 	}
 
@@ -108,7 +108,7 @@ class ReviewServiceApplicationTests extends PostgresqlTestBase {
 	void getReviewsInvalidParameter() {
 
 		getAndVerifyReviewsByProductId("?productId=no-integer", HttpStatus.BAD_REQUEST)
-				.jsonPath("$.path").isEqualTo("/review")
+				.jsonPath("$.path").isEqualTo("/reviews")
 				.jsonPath("$.message").isEqualTo("Type mismatch.");
 	}
 
@@ -125,7 +125,7 @@ class ReviewServiceApplicationTests extends PostgresqlTestBase {
 		int productIdInvalid = -1;
 
 		getAndVerifyReviewsByProductId("?productId=" + productIdInvalid, HttpStatus.UNPROCESSABLE_ENTITY)
-				.jsonPath("$.path").isEqualTo("/review")
+				.jsonPath("$.path").isEqualTo("/reviews")
 				.jsonPath("$.message").isEqualTo("Invalid productId: " + productIdInvalid);
 	}
 
@@ -135,7 +135,7 @@ class ReviewServiceApplicationTests extends PostgresqlTestBase {
 
 	private WebTestClient.BodyContentSpec getAndVerifyReviewsByProductId(String productIdQuery, HttpStatus expectedStatus) {
 		return client.get()
-				.uri("/review" + productIdQuery)
+				.uri("/reviews" + productIdQuery)
 				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus().isEqualTo(expectedStatus)

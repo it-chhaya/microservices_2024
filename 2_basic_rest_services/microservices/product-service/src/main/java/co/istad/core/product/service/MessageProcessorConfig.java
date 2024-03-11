@@ -25,18 +25,18 @@ public class MessageProcessorConfig {
 			public void accept(Event<Long, ProductDto> event) {
 				log.info("Process message created at {}...",  event);
 
-				switch (event.eventType()) {
+				switch (event.getEventType()) {
 					case CREATE -> {
-						ProductDto productDto = event.data();
-						log.info("Create product with ID: {}", productDto.productId());
+						ProductDto productDto = event.getData();
+						log.info("Create product with ID: {}", productDto.getProductId());
 					}
 					case DELETE -> {
-						Long productId = event.key();
+						Long productId = event.getKey();
 						log.info("Delete product with ProductID: {}", productId);
 						productService.deleteProduct(productId).block();
 					}
 					default -> {
-						String errorMessage = "Incorrect event type: " + event.eventType() + ", expected a CREATE or DELETE event";
+						String errorMessage = "Incorrect event type: " + event.getEventType() + ", expected a CREATE or DELETE event";
 						log.warn(errorMessage);
 						throw new EventProcessingException(errorMessage);
 					}

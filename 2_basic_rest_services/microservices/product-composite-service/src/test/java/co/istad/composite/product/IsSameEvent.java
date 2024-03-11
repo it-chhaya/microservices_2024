@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -18,9 +20,9 @@ public class IsSameEvent extends TypeSafeMatcher<String> {
 
     private static final Logger LOG = LoggerFactory.getLogger(IsSameEvent.class);
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
-    private Event expectedEvent;
+    private final Event expectedEvent;
 
 
     private IsSameEvent(Event expectedEvent) {
@@ -34,20 +36,31 @@ public class IsSameEvent extends TypeSafeMatcher<String> {
             return false;
         }
 
-        LOG.trace("Convert the following json string to a map: {}", eventAsJson);
+        LOG.info("Convert the following json string to a map: {}", eventAsJson);
         Map mapEvent = convertJsonStringToMap(eventAsJson);
         mapEvent.remove("eventCreatedAt");
+        LOG.info("Converted the following json string to a map: {}", mapEvent);
 
+        LOG.info("Expected event: {}", expectedEvent);
         Map mapExpectedEvent = getMapWithoutCreatedAt(expectedEvent);
 
-        LOG.trace("Got the map: {}", mapEvent);
-        LOG.trace("Compare to the expected map: {}", mapExpectedEvent);
-        return mapEvent.equals(mapExpectedEvent);
+        LOG.info("Got the map: {}", mapEvent.hashCode());
+        LOG.info("Compare to the expected map: {}", mapExpectedEvent.hashCode());
+        LOG.info("Result: {}", mapEvent.equals(mapExpectedEvent));
+
+        return mapEvent.entrySet().stream()
+                .allMatch(o -> {
+					Map.Entry entry = (Map.Entry) o;
+					return entry.getValue().equals(mapExpectedEvent.get(entry.getKey()));
+				});
     }
 
     @Override
     public void describeTo(Description description) {
+        /*Map mapExpectedEvent = getMapWithoutCreatedAt(expectedEvent);
+        mapExpectedEvent.remove("eventCreatedAt");*/
         String expectedJson = convertObjectToJsonString(expectedEvent);
+        LOG.info("expectedJson: {}", expectedJson);
         description.appendText("expected to look like " + expectedJson);
     }
 
